@@ -1,0 +1,3 @@
+[submodule "duckdb-go-api"]
+	path = duckdb-go-api
+	url = https://github.com/JC1738/duckdb-go-api.git

@@ -1,0 +1,20 @@
+# Build artifacts
+build/
+main
+coverage.out
+cmake-build/
+
+# CGO reference files (not compiled - see main.go for CGO callback explanation)
+cgo/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+docs
+CLAUDE.md
+.claude
+# OS
+.DS_Store
