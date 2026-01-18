@@ -1,0 +1,116 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feat/*]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - uses: golangci/golangci-lint-action@v6
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+      - name: Run unit tests
+        run: make test-unit
+
+  build:
+    needs: [lint, test]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            platform: linux_amd64
+            goos: linux
+            goarch: amd64
+          - os: ubuntu-24.04-arm
+            platform: linux_arm64
+            goos: linux
+            goarch: arm64
+          - os: macos-15
+            platform: osx_amd64
+            goos: darwin
+            goarch: amd64
+          - os: macos-14
+            platform: osx_arm64
+            goos: darwin
+            goarch: arm64
+          - os: windows-latest
+            platform: windows_amd64
+            goos: windows
+            goarch: amd64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Setup CGO (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          echo "CC=gcc" >> $env:GITHUB_ENV
+          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+
+      - name: Build extension
+        run: make build GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: duckarrow-${{ matrix.platform }}
+          path: build/${{ matrix.platform }}/duckarrow.duckdb_extension
+          retention-days: 7
+
+  integration-test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: duckarrow-linux_amd64
+          path: ./extension
+
+      - name: Install DuckDB
+        # NOTE: Version must match DUCKDB_VERSION in Makefile
+        run: |
+          wget -q https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb_cli-linux-amd64.zip
+          unzip -q duckdb_cli-linux-amd64.zip
+          chmod +x duckdb
+
+      - name: Test extension load
+        run: ./duckdb -unsigned -c "LOAD './extension/duckarrow.duckdb_extension';"

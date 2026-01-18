@@ -58,8 +58,10 @@ build: deps
 		-dv $(DUCKDB_VERSION) \
 		-ev $(EXTENSION_VERSION) \
 		-p $(PLATFORM)
-	@# Create symlink for test convenience (tests use ./build/duckarrow.duckdb_extension)
+	@# Create symlink for test convenience (skip on Windows)
+ifneq ($(GOOS),windows)
 	@ln -sf $(PLATFORM)/$(EXTENSION_NAME).duckdb_extension $(BUILD_DIR)/$(EXTENSION_NAME).duckdb_extension
+endif
 	@echo "Built: $(OUTPUT_DIR)/$(EXTENSION_NAME).duckdb_extension for $(PLATFORM)"
 
 # Platform-specific targets
