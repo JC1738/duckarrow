@@ -43,13 +43,31 @@ SELECT id, customer_name FROM duckarrow."Orders" WHERE status = 'COMPLETED';
 
 ## Installation
 
-### Prerequisites
+### Download Pre-built Release (Recommended)
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/JC1738/duckarrow/releases):
+
+```bash
+# Using gh CLI (recommended)
+gh release download --repo JC1738/duckarrow --pattern "*linux_amd64*"    # Linux x86_64
+gh release download --repo JC1738/duckarrow --pattern "*osx_arm64*"      # macOS Apple Silicon
+gh release download --repo JC1738/duckarrow --pattern "*osx_amd64*"      # macOS Intel
+gh release download --repo JC1738/duckarrow --pattern "*windows_amd64*"  # Windows
+
+# Or download specific version with curl
+VERSION=v0.0.1
+curl -LO "https://github.com/JC1738/duckarrow/releases/download/${VERSION}/duckarrow-${VERSION}-linux_amd64.duckdb_extension"
+```
+
+### Build from Source
+
+#### Prerequisites
 
 - Go 1.24.0+
 - Python 3 (for metadata embedding)
 - CGO enabled
 
-### Clone and Build
+#### Clone and Build
 
 ```bash
 # Clone with submodules
