@@ -1,5 +1,7 @@
 # DuckArrow - DuckDB Flight SQL Extension
 
+[![CI](https://github.com/JC1738/duckarrow/actions/workflows/ci.yml/badge.svg)](https://github.com/JC1738/duckarrow/actions/workflows/ci.yml)
+
 A DuckDB extension written in Go that enables querying remote [Apache Arrow Flight SQL](https://arrow.apache.org/docs/format/FlightSql.html) servers directly from DuckDB SQL.
 
 ## Features
@@ -360,3 +362,5 @@ MIT License - see [LICENSE](LICENSE) file for details.
 2. Create a feature branch
 3. Run tests: `make test-all`
 4. Submit a pull request
+
+CI runs automatically on pull requests (lint, unit tests, multi-platform builds).
