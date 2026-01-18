@@ -48,10 +48,11 @@ func Connect(ctx context.Context, cfg Config) (*Client, error) {
 	)
 
 	// Add gRPC keepalive to prevent stale connections
+	// Use conservative settings to avoid server's ENHANCE_YOUR_CALM/too_many_pings
 	keepaliveOpts := grpc.WithKeepaliveParams(keepalive.ClientParameters{
-		Time:                30 * time.Second, // Ping every 30s if idle
-		Timeout:             10 * time.Second, // Wait 10s for ping response
-		PermitWithoutStream: true,             // Ping even when no streams
+		Time:                2 * time.Minute,  // Ping interval during active streams
+		Timeout:             20 * time.Second, // Wait 20s for ping response
+		PermitWithoutStream: false,            // Only ping with active streams
 	})
 
 	db, err := drv.NewDatabaseWithOptions(opts, dialOpts, keepaliveOpts)
