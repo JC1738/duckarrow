@@ -54,7 +54,7 @@ jobs:
             platform: linux_arm64
             goos: linux
             goarch: arm64
-          - os: macos-13
+          - os: macos-15
             platform: osx_amd64
             goos: darwin
             goarch: amd64
