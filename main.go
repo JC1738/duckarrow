@@ -13,6 +13,7 @@
 //   - duckarrow_init_wrapper: Table function init phase
 //   - duckarrow_scan_wrapper: Table function scan phase (returns data)
 //   - duckarrow_configure_callback: Scalar function for configuration
+//   - duckarrow_version_callback: Scalar function returning extension version
 //   - duckarrow_replacement_scan_callback: Rewrites duckarrow.* table references
 package main
 
@@ -72,6 +73,12 @@ func duckarrow_init_c_api(info unsafe.Pointer, access unsafe.Pointer) bool {
 	// Register duckarrow_configure scalar function
 	if state := RegisterDuckArrowConfigureFunction(conn); state == duckdb.STATE_ERROR {
 		fmt.Println("[duckarrow] Failed to register duckarrow_configure function")
+		return false
+	}
+
+	// Register duckarrow_version scalar function
+	if state := RegisterDuckArrowVersionFunction(conn); state == duckdb.STATE_ERROR {
+		fmt.Println("[duckarrow] Failed to register duckarrow_version function")
 		return false
 	}
 

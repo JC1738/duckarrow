@@ -1,7 +1,7 @@
 package main
 
 /*
-#cgo CFLAGS: -I${SRCDIR}/../duckdb-go-api -DDUCKDB_API_EXCLUDE_FUNCTIONS=1
+#cgo CFLAGS: -I${SRCDIR}/duckdb-go-api -DDUCKDB_API_EXCLUDE_FUNCTIONS=1
 #include <stdlib.h>
 #include <duckdb.h>
 #include <duckdb_go_extension.h>

@@ -54,8 +54,8 @@ gh release download --repo JC1738/duckarrow --pattern "*osx_arm64*"      # macOS
 gh release download --repo JC1738/duckarrow --pattern "*osx_amd64*"      # macOS Intel
 gh release download --repo JC1738/duckarrow --pattern "*windows_amd64*"  # Windows
 
-# Or download specific version with curl
-VERSION=v0.0.1
+# Or download specific version with curl (replace VERSION with desired tag)
+VERSION=v0.0.3
 curl -LO "https://github.com/JC1738/duckarrow/releases/download/${VERSION}/duckarrow-${VERSION}-linux_amd64.duckdb_extension"
 ```
 
@@ -112,6 +112,13 @@ duckdb -unsigned -c "LOAD './build/linux_amd64/duckarrow.duckdb_extension';"
 ```
 
 ## Usage
+
+### Check Version
+
+```sql
+SELECT duckarrow_version();
+-- Returns: v0.0.3 (or "dev" for local builds)
+```
 
 ### Configuration
 
@@ -239,7 +246,8 @@ duckarrow/
 ├── main.go                     # Extension entry point, CGO bindings
 ├── table_function.go           # Core table function, type conversion
 ├── replacement_scan.go         # duckarrow.* syntax rewriter
-├── config_function.go          # Configuration & validation
+├── config_function.go          # duckarrow_configure() function
+├── version_function.go         # duckarrow_version() function
 ├── query_builder.go            # Query construction with projection
 ├── internal/
 │   ├── flight/
