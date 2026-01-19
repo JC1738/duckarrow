@@ -1,6 +1,7 @@
 DUCKDB_VERSION := v1.2.0
 EXTENSION_NAME := duckarrow
-EXTENSION_VERSION := v0.0.1
+# Extract version from git tag, fall back to "dev" for local builds
+EXTENSION_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo "dev")
 
 BUILD_DIR := build
 SCRIPTS_DIR := scripts
@@ -51,7 +52,7 @@ deps:
 # Build the extension
 build: deps
 	CGO_ENABLED=1 GOOS=$(GOOS) GOARCH=$(GOARCH) \
-		go build -buildmode=c-shared -o $(OUTPUT) ./
+		go build -buildmode=c-shared -ldflags="-X main.Version=$(EXTENSION_VERSION)" -o $(OUTPUT) ./
 	cd $(OUTPUT_DIR) && python3 ../../$(SCRIPTS_DIR)/append_extension_metadata.py \
 		-l $(EXTENSION_NAME)$(EXT) \
 		-n $(EXTENSION_NAME) \
