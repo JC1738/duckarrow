@@ -13,6 +13,9 @@ cgo/
 *.swp
 *.swo
 
+duckarrow-github.sql
+duckarrow-prod.sql
+
 docs
 CLAUDE.md
 .claude
