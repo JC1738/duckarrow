@@ -85,7 +85,7 @@ func duckarrow_init_c_api(info unsafe.Pointer, access unsafe.Pointer) bool {
 	// Register replacement scan for duckarrow.* tables
 	RegisterReplacementScan(db)
 
-	fmt.Println("[duckarrow] Extension loaded successfully")
+	fmt.Printf("[duckarrow] Extension %s loaded successfully\n", Version)
 	return true
 }
 
