@@ -6,7 +6,7 @@
 
 -- Load extension and configure
 LOAD './build/duckarrow.duckdb_extension';
-SELECT duckarrow_configure('grpc://localhost:31337', 'duckarrow_user', 'duckarrow_password');
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 .print '=== Data Type Tests ==='
 

@@ -104,9 +104,7 @@ func duckarrow_bind_wrapper(info C.duckdb_bind_info) {
 	ctx := context.Background()
 	connResult, err := flight.GetConnection(ctx, cfg)
 	if err != nil {
-		errStr := C.CString(fmt.Sprintf("connection failed: %v", err))
-		C.duckdb_bind_set_error(info, errStr)
-		C.free(unsafe.Pointer(errStr))
+		duckdb.SetBindError(duckdb.BindInfo{Ptr: unsafe.Pointer(info)}, "connection failed: %v", err)
 		return
 	}
 
@@ -130,9 +128,7 @@ func duckarrow_bind_wrapper(info C.duckdb_bind_info) {
 		} else {
 			connResult.Client.Close()
 		}
-		errStr := C.CString(fmt.Sprintf("query failed: %v", err))
-		C.duckdb_bind_set_error(info, errStr)
-		C.free(unsafe.Pointer(errStr))
+		duckdb.SetBindError(duckdb.BindInfo{Ptr: unsafe.Pointer(info)}, "query failed: %v", err)
 		return
 	}
 
@@ -334,9 +330,7 @@ func duckarrow_init_wrapper(info C.duckdb_init_info) {
 	for i := C.idx_t(0); i < columnCount; i++ {
 		colIdx := C.duckdb_init_get_column_index(info, i)
 		if int(colIdx) >= len(bindData.AllColumns) {
-			errStr := C.CString(fmt.Sprintf("column index %d out of range (max %d)", colIdx, len(bindData.AllColumns)-1))
-			C.duckdb_init_set_error(info, errStr)
-			C.free(unsafe.Pointer(errStr))
+			duckdb.SetInitError(duckdb.InitInfo{Ptr: unsafe.Pointer(info)}, "column index %d out of range (max %d)", colIdx, len(bindData.AllColumns)-1)
 			return
 		}
 		projectedColumns[i] = bindData.AllColumns[colIdx]
@@ -349,9 +343,7 @@ func duckarrow_init_wrapper(info C.duckdb_init_info) {
 	ctx := context.Background()
 	result, err := bindData.Client.Query(ctx, query)
 	if err != nil {
-		errStr := C.CString(fmt.Sprintf("query execution failed: %v", err))
-		C.duckdb_init_set_error(info, errStr)
-		C.free(unsafe.Pointer(errStr))
+		duckdb.SetInitError(duckdb.InitInfo{Ptr: unsafe.Pointer(info)}, "query execution failed: %v", err)
 		return
 	}
 
@@ -370,9 +362,7 @@ func duckarrow_scan_wrapper(info C.duckdb_function_info, output C.duckdb_data_ch
 	bindHandle := cgo.Handle(uintptr(bindPtr))
 	bindData, ok := bindHandle.Value().(*BindData)
 	if !ok {
-		errStr := C.CString("internal error: invalid bind data type")
-		C.duckdb_function_set_error(info, errStr)
-		C.free(unsafe.Pointer(errStr))
+		duckdb.SetFunctionError(duckdb.FunctionInfo{Ptr: unsafe.Pointer(info)}, "internal error: invalid bind data type")
 		return
 	}
 
@@ -381,9 +371,7 @@ func duckarrow_scan_wrapper(info C.duckdb_function_info, output C.duckdb_data_ch
 	stateHandle := cgo.Handle(uintptr(statePtr))
 	state, ok := stateHandle.Value().(*ScanState)
 	if !ok {
-		errStr := C.CString("internal error: invalid scan state type")
-		C.duckdb_function_set_error(info, errStr)
-		C.free(unsafe.Pointer(errStr))
+		duckdb.SetFunctionError(duckdb.FunctionInfo{Ptr: unsafe.Pointer(info)}, "internal error: invalid scan state type")
 		return
 	}
 
@@ -414,13 +402,8 @@ func scanHardcodedData(info C.duckdb_function_info, output C.duckdb_data_chunk, 
 	nameVec := duckdb.DataChunkGetVector(duckdb.DataChunk{Ptr: unsafe.Pointer(output)}, 1)
 
 	for i, row := range rows {
-		idStr := C.CString(row.id)
-		C.duckdb_vector_assign_string_element(C.duckdb_vector(idVec.Ptr), C.idx_t(i), idStr)
-		C.free(unsafe.Pointer(idStr))
-
-		nameStr := C.CString(row.name)
-		C.duckdb_vector_assign_string_element(C.duckdb_vector(nameVec.Ptr), C.idx_t(i), nameStr)
-		C.free(unsafe.Pointer(nameStr))
+		duckdb.AssignStringToVector(idVec, i, row.id)
+		duckdb.AssignStringToVector(nameVec, i, row.name)
 	}
 
 	C.duckdb_data_chunk_set_size(output, C.idx_t(len(rows)))
@@ -444,9 +427,7 @@ func scanArrowData(info C.duckdb_function_info, output C.duckdb_data_chunk, bind
 
 		if !bindData.Reader.Next() {
 			if err := bindData.Reader.Err(); err != nil {
-				errStr := C.CString(err.Error())
-				C.duckdb_function_set_error(info, errStr)
-				C.free(unsafe.Pointer(errStr))
+				duckdb.SetFunctionError(duckdb.FunctionInfo{Ptr: unsafe.Pointer(info)}, "%v", err)
 			}
 			atomic.StoreInt32(&state.Done, 1)
 			C.duckdb_data_chunk_set_size(output, 0)
@@ -474,9 +455,7 @@ func scanArrowData(info C.duckdb_function_info, output C.duckdb_data_chunk, bind
 		duckVec := duckdb.DataChunkGetVector(duckdb.DataChunk{Ptr: unsafe.Pointer(output)}, uint64(colIdx))
 
 		if err := convertArrowToDuckDB(arrowCol, duckVec, int(state.BatchPosition), rowsToEmit); err != nil {
-			errStr := C.CString(fmt.Sprintf("convert col %d: %v", colIdx, err))
-			C.duckdb_function_set_error(info, errStr)
-			C.free(unsafe.Pointer(errStr))
+			duckdb.SetFunctionError(duckdb.FunctionInfo{Ptr: unsafe.Pointer(info)}, "convert col %d: %v", colIdx, err)
 			return
 		}
 	}
@@ -500,9 +479,7 @@ func convertArrowToDuckDB(arrowCol arrow.Array, duckVec duckdb.Vector, offset, c
 				duckdb.ValiditySetRowInvalid(validity, uint64(i))
 				continue
 			}
-			cStr := C.CString(col.Value(srcIdx))
-			C.duckdb_vector_assign_string_element(C.duckdb_vector(duckVec.Ptr), C.idx_t(i), cStr)
-			C.free(unsafe.Pointer(cStr))
+			duckdb.AssignStringToVector(duckVec, i, col.Value(srcIdx))
 		}
 
 	case *array.LargeString:
@@ -512,9 +489,7 @@ func convertArrowToDuckDB(arrowCol arrow.Array, duckVec duckdb.Vector, offset, c
 				duckdb.ValiditySetRowInvalid(validity, uint64(i))
 				continue
 			}
-			cStr := C.CString(col.Value(srcIdx))
-			C.duckdb_vector_assign_string_element(C.duckdb_vector(duckVec.Ptr), C.idx_t(i), cStr)
-			C.free(unsafe.Pointer(cStr))
+			duckdb.AssignStringToVector(duckVec, i, col.Value(srcIdx))
 		}
 
 	case *array.Int64:
@@ -763,23 +738,7 @@ func convertArrowToDuckDB(arrowCol arrow.Array, duckVec duckdb.Vector, offset, c
 				duckdb.ValiditySetRowInvalid(validity, uint64(i))
 				continue
 			}
-			data := col.Value(srcIdx)
-			if len(data) == 0 {
-				// Empty binary - assign empty string
-				C.duckdb_vector_assign_string_element_len(
-					C.duckdb_vector(duckVec.Ptr),
-					C.idx_t(i),
-					nil,
-					0,
-				)
-				continue
-			}
-			C.duckdb_vector_assign_string_element_len(
-				C.duckdb_vector(duckVec.Ptr),
-				C.idx_t(i),
-				(*C.char)(unsafe.Pointer(&data[0])),
-				C.idx_t(len(data)),
-			)
+			duckdb.AssignBytesToVector(duckVec, i, col.Value(srcIdx))
 		}
 
 	case *array.LargeBinary:
@@ -790,23 +749,7 @@ func convertArrowToDuckDB(arrowCol arrow.Array, duckVec duckdb.Vector, offset, c
 				duckdb.ValiditySetRowInvalid(validity, uint64(i))
 				continue
 			}
-			data := col.Value(srcIdx)
-			if len(data) == 0 {
-				// Empty binary - assign empty string
-				C.duckdb_vector_assign_string_element_len(
-					C.duckdb_vector(duckVec.Ptr),
-					C.idx_t(i),
-					nil,
-					0,
-				)
-				continue
-			}
-			C.duckdb_vector_assign_string_element_len(
-				C.duckdb_vector(duckVec.Ptr),
-				C.idx_t(i),
-				(*C.char)(unsafe.Pointer(&data[0])),
-				C.idx_t(len(data)),
-			)
+			duckdb.AssignBytesToVector(duckVec, i, col.Value(srcIdx))
 		}
 
 	case *array.FixedSizeBinary:
@@ -826,9 +769,7 @@ func convertArrowToDuckDB(arrowCol arrow.Array, duckVec duckdb.Vector, offset, c
 			} else {
 				val = fmt.Sprintf("%x", data)
 			}
-			cStr := C.CString(val)
-			C.duckdb_vector_assign_string_element(C.duckdb_vector(duckVec.Ptr), C.idx_t(i), cStr)
-			C.free(unsafe.Pointer(cStr))
+			duckdb.AssignStringToVector(duckVec, i, val)
 		}
 
 	case *array.Decimal128:
@@ -1162,9 +1103,7 @@ func convertArrowToDuckDB(arrowCol arrow.Array, duckVec duckdb.Vector, offset, c
 				val = fmt.Sprintf("%v", arrowCol.GetOneForMarshal(srcIdx))
 			}
 
-			cStr := C.CString(val)
-			C.duckdb_vector_assign_string_element(C.duckdb_vector(duckVec.Ptr), C.idx_t(i), cStr)
-			C.free(unsafe.Pointer(cStr))
+			duckdb.AssignStringToVector(duckVec, i, val)
 		}
 	}
 

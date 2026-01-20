@@ -16,7 +16,7 @@ LOAD './build/duckarrow.duckdb_extension';
 .bail off
 
 -- First configure correctly
-SELECT duckarrow_configure('grpc://localhost:31337', 'duckarrow_user', 'duckarrow_password');
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- This should fail with a syntax error from the remote server
 SELECT * FROM duckarrow."Order" WHERE SELECTT;
@@ -30,7 +30,7 @@ SELECT * FROM duckarrow."Order" WHERE SELECTT;
 .print '--- Test 2: Non-existent Table ---'
 
 -- Reconfigure (in case previous test affected state)
-SELECT duckarrow_configure('grpc://localhost:31337', 'duckarrow_user', 'duckarrow_password');
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- This should fail with table not found
 SELECT * FROM duckarrow."ThisTableDefinitelyDoesNotExist12345";
@@ -94,7 +94,7 @@ SELECT 1 FROM duckarrow."Order" LIMIT 1;
 .print '--- Test 7: Invalid Credentials ---'
 
 -- Configure with wrong credentials
-SELECT duckarrow_configure('grpc://localhost:31337', 'wrong_user', 'wrong_pass');
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'wrong_user', 'wrong_pass');
 
 -- This should fail with auth error
 SELECT * FROM duckarrow."Order" LIMIT 1;
@@ -108,7 +108,7 @@ SELECT * FROM duckarrow."Order" LIMIT 1;
 .print '--- Test 8: SQL Injection Prevention ---'
 
 -- Restore valid config first
-SELECT duckarrow_configure('grpc://localhost:31337', 'duckarrow_user', 'duckarrow_password');
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- These should be blocked by table name validation
 -- Semicolon injection attempt
@@ -151,7 +151,7 @@ SELECT * FROM duckarrow."malicious*/Order";
 .bail on
 
 -- Restore valid configuration
-SELECT duckarrow_configure('grpc://localhost:31337', 'duckarrow_user', 'duckarrow_password');
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- This should work after all the error tests
 SELECT COUNT(*) as recovery_test FROM duckarrow."Order";

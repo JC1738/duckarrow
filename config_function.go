@@ -150,10 +150,7 @@ func duckarrow_configure_callback(info C.duckdb_function_info, input C.duckdb_da
 		SetDuckArrowConfig(uri, username, password, skipVerify)
 
 		// Return a confirmation message
-		result := "DuckArrow configured successfully"
-		resultCStr := C.CString(result)
-		C.duckdb_vector_assign_string_element(output, i, resultCStr)
-		C.free(unsafe.Pointer(resultCStr))
+		duckdb.AssignStringToVector(duckdb.Vector{Ptr: unsafe.Pointer(output)}, int(i), "DuckArrow configured successfully")
 	}
 }
 

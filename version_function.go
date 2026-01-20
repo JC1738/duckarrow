@@ -35,11 +35,8 @@ func duckarrow_version_callback(info C.duckdb_function_info, input C.duckdb_data
 	}
 
 	// Return the version string for each row
-	versionCStr := C.CString(Version)
-	defer C.free(unsafe.Pointer(versionCStr))
-
 	for i := range inputSize {
-		C.duckdb_vector_assign_string_element(output, C.idx_t(i), versionCStr)
+		duckdb.AssignStringToVector(duckdb.Vector{Ptr: unsafe.Pointer(output)}, i, Version)
 	}
 }
 
