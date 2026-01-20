@@ -4,7 +4,7 @@
 LOAD './build/duckarrow.duckdb_extension';
 
 -- Configure credentials
-SELECT duckarrow_configure('grpc+tls://localhost:31337', 'duckarrow_user', 'duckarrow_password', true);
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- Test 1: Basic query with real data and types
 SELECT '=== Test 1: Basic query with types ===' as test;

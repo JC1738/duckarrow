@@ -5,7 +5,7 @@ LOAD './build/duckarrow.duckdb_extension';
 
 -- Test 1: Configure duckarrow URI
 SELECT '=== Test 1: Configure duckarrow URI ===' as test;
-SELECT duckarrow_configure('grpc+tls://localhost:31337', 'duckarrow_user', 'duckarrow_password', true);
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- Test 2: Basic replacement scan query
 SELECT '=== Test 2: Basic replacement scan ===' as test;
@@ -73,7 +73,7 @@ SELECT duckarrow_configure('grpc://localhost:1234', 'user', 'pass');
 
 -- Test 16: Reconfigure back to TLS for remaining tests
 SELECT '=== Test 16: Reconfigure to TLS ===' as test;
-SELECT duckarrow_configure('grpc+tls://localhost:31337', 'duckarrow_user', 'duckarrow_password', true);
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- Test 17: NULL handling
 SELECT '=== Test 17: NULL handling ===' as test;

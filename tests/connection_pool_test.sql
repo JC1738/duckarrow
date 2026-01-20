@@ -8,7 +8,7 @@ LOAD './build/duckarrow.duckdb_extension';
 
 -- Configure
 SELECT '=== Configure ===' as test;
-SELECT duckarrow_configure('grpc+tls://localhost:31337', 'duckarrow_user', 'duckarrow_password', true);
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- First query (cold connection - expect ~150-200ms)
 SELECT '=== Query 1 (cold connection) ===' as test;
@@ -32,7 +32,7 @@ SELECT id, name FROM duckarrow."Order" LIMIT 3;
 
 -- Test reconfiguration creates new connection (same credentials, new pool entry)
 SELECT '=== Reconfigure (same server, fresh connection) ===' as test;
-SELECT duckarrow_configure('grpc+tls://localhost:31337', 'duckarrow_user', 'duckarrow_password', true);
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'gizmosql_user', 'gizmosql_password', true);
 
 -- First query after reconfig (should use existing pool)
 SELECT '=== Query 6 (after reconfig) ===' as test;
