@@ -108,9 +108,11 @@ jobs:
       - name: Install DuckDB
         # NOTE: Version must match DUCKDB_VERSION in Makefile
         run: |
-          wget -q https://github.com/duckdb/duckdb/releases/download/v1.4.0/duckdb_cli-linux-amd64.zip
-          unzip -q duckdb_cli-linux-amd64.zip
+          wget https://github.com/duckdb/duckdb/releases/download/v1.4.0/duckdb_cli-linux-amd64.zip
+          unzip duckdb_cli-linux-amd64.zip
           chmod +x duckdb
+          ./duckdb --version
+          ./duckdb -c "SELECT version()"
 
       - name: Test extension load
         run: ./duckdb -unsigned -c "LOAD './extension/duckarrow.duckdb_extension';"
