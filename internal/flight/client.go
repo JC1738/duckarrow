@@ -100,6 +100,28 @@ func (c *Client) Query(ctx context.Context, sql string) (*QueryResult, error) {
 	}, nil
 }
 
+// Execute executes a non-query SQL statement (DDL/DML) and returns affected row count.
+// Use this for CREATE, DROP, INSERT, UPDATE, DELETE statements.
+// Returns -1 if the server doesn't provide affected row count.
+func (c *Client) Execute(ctx context.Context, sql string) (int64, error) {
+	stmt, err := c.conn.NewStatement()
+	if err != nil {
+		return 0, fmt.Errorf("create statement: %w", err)
+	}
+	defer stmt.Close()
+
+	if err := stmt.SetSqlQuery(sql); err != nil {
+		return 0, fmt.Errorf("set query: %w", err)
+	}
+
+	affected, err := stmt.ExecuteUpdate(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("execute update: %w", err)
+	}
+
+	return affected, nil
+}
+
 // IsHealthy checks if the connection is still valid
 func (c *Client) IsHealthy() bool {
 	return c.conn != nil && c.db != nil

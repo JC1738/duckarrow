@@ -7,6 +7,7 @@ A DuckDB extension written in Go that enables querying remote [Apache Arrow Flig
 ## Features
 
 - **Simple syntax**: Query remote tables with `SELECT * FROM duckarrow."TableName"`
+- **DDL/DML support**: Execute CREATE, DROP, INSERT, UPDATE, DELETE via `duckarrow_execute()`
 - **Column projection pushdown**: Only fetches requested columns (7-9x speedup)
 - **Connection pooling**: Reuses gRPC connections across queries
 - **Full type support**: 20+ Arrow types including DECIMAL, LIST, STRUCT, MAP
@@ -169,6 +170,25 @@ SELECT * FROM duckarrow_query(
 );
 ```
 
+### DDL/DML Execution
+
+For statements that don't return results (CREATE, DROP, INSERT, UPDATE, DELETE), use `duckarrow_execute()`:
+
+```sql
+-- Create a table on the remote server
+SELECT duckarrow_execute('CREATE TABLE "my_table" (id INTEGER, name VARCHAR)');
+
+-- Insert data
+SELECT duckarrow_execute('INSERT INTO "my_table" VALUES (1, ''Alice'')');
+
+-- Drop a table
+SELECT duckarrow_execute('DROP TABLE "my_table"');
+```
+
+The function returns the number of affected rows (or -1 if the server doesn't provide this information).
+
+**Note**: Unlike `duckarrow.*` syntax which only works for SELECT queries, `duckarrow_execute()` is required for DDL/DML because DuckDB's replacement scan only intercepts table references in FROM clauses.
+
 ### Examples
 
 ```sql
@@ -247,6 +267,7 @@ duckarrow/
 ├── table_function.go           # Core table function, type conversion
 ├── replacement_scan.go         # duckarrow.* syntax rewriter
 ├── config_function.go          # duckarrow_configure() function
+├── execute_function.go         # duckarrow_execute() for DDL/DML
 ├── version_function.go         # duckarrow_version() function
 ├── query_builder.go            # Query construction with projection
 ├── internal/
@@ -371,6 +392,7 @@ Connection pooling reduces overhead for subsequent queries from ~100ms to ~5ms.
 - **Predicate pushdown not yet implemented**: WHERE clauses filtered locally
 - **Single server per session**: Cannot query multiple Flight SQL servers simultaneously
 - **No catalog integration**: Remote tables don't appear in `information_schema`
+- **DDL/DML requires explicit function**: Use `duckarrow_execute()` for CREATE/DROP/INSERT/UPDATE/DELETE (the `duckarrow.*` syntax only works for SELECT)
 
 ## Dependencies
 
