@@ -82,6 +82,12 @@ func duckarrow_init_c_api(info unsafe.Pointer, access unsafe.Pointer) bool {
 		return false
 	}
 
+	// Register duckarrow_execute scalar function
+	if state := RegisterDuckArrowExecuteFunction(conn); state == duckdb.STATE_ERROR {
+		fmt.Println("[duckarrow] Failed to register duckarrow_execute function")
+		return false
+	}
+
 	// Register replacement scan for duckarrow.* tables
 	RegisterReplacementScan(db)
 
