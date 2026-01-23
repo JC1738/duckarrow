@@ -107,11 +107,7 @@ func duckarrow_replacement_scan_callback(info C.duckdb_replacement_scan_info, ta
 	}
 
 	// Skip if it looks like a DuckDB internal or system table
-	lowerTable := strings.ToLower(actualTable)
-	if strings.HasPrefix(lowerTable, "pg_") ||
-		strings.HasPrefix(lowerTable, "sqlite_") ||
-		strings.HasPrefix(lowerTable, "__") ||
-		lowerTable == "information_schema" {
+	if validation.ShouldSkipTable(actualTable) {
 		return
 	}
 
