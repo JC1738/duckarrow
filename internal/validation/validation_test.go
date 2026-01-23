@@ -154,3 +154,41 @@ func TestValidateTableNameConcurrent(t *testing.T) {
 
 	wg.Wait()
 }
+
+func TestShouldSkipTable(t *testing.T) {
+	tests := []struct {
+		name      string
+		tableName string
+		want      bool
+	}{
+		// Tables that should be skipped
+		{"pg_catalog", "pg_catalog", true},
+		{"pg_type", "pg_type", true},
+		{"sqlite_master", "sqlite_master", true},
+		{"sqlite_sequence", "sqlite_sequence", true},
+		{"duckdb internal __", "__duckdb_internal", true},
+		{"duckdb internal __duckarrow", "__duckarrow_cache", true},
+		{"information_schema", "information_schema", true},
+		{"MotherDuck cache table", "mdClientCache_KgH$9x4WdYvV_3", true},
+		{"MotherDuck cache lowercase", "mdclientcache_abc123", true},
+		{"MotherDuck cache uppercase", "MDCLIENTCACHE_XYZ", true},
+		{"MotherDuck cache mixed case", "MdClientCache_Test", true},
+
+		// Tables that should NOT be skipped (regular user tables)
+		{"regular table", "users", false},
+		{"table with underscore", "my_table", false},
+		{"table starting with md", "mdtable", false},
+		{"table starting with pg but not pg_", "pgtable", false},
+		{"empty string", "", false},
+		{"table with sqlite in name", "my_sqlite_backup", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ShouldSkipTable(tt.tableName)
+			if got != tt.want {
+				t.Errorf("ShouldSkipTable(%q) = %v, want %v", tt.tableName, got, tt.want)
+			}
+		})
+	}
+}

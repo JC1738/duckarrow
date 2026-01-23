@@ -8,6 +8,17 @@ import (
 	"strings"
 )
 
+// ShouldSkipTable returns true if the table name should be skipped by replacement scan.
+// This includes DuckDB internal tables, system tables, and MotherDuck cache tables.
+func ShouldSkipTable(tableName string) bool {
+	lowerTable := strings.ToLower(tableName)
+	return strings.HasPrefix(lowerTable, "pg_") ||
+		strings.HasPrefix(lowerTable, "sqlite_") ||
+		strings.HasPrefix(lowerTable, "__") ||
+		strings.HasPrefix(lowerTable, "mdclientcache_") || // MotherDuck cache tables
+		lowerTable == "information_schema"
+}
+
 // ValidateTableName checks if a table name is safe to use in SQL queries.
 // This prevents SQL injection attacks by rejecting names containing dangerous characters.
 // The query is sent to a remote Flight SQL server, so we must validate thoroughly.
