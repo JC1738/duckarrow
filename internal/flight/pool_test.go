@@ -9,45 +9,45 @@ func TestConfigKey(t *testing.T) {
 	pool := NewPool()
 
 	tests := []struct {
-		name       string
-		cfg1       Config
-		cfg2       Config
+		name        string
+		cfg1        Config
+		cfg2        Config
 		shouldMatch bool
 	}{
 		{
-			name: "identical configs same key",
-			cfg1: Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: false},
-			cfg2: Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: false},
+			name:        "identical configs same key",
+			cfg1:        Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: false},
+			cfg2:        Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: false},
 			shouldMatch: true,
 		},
 		{
-			name: "different URI different key",
-			cfg1: Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass"},
-			cfg2: Config{URI: "grpc://localhost:8080", Username: "user", Password: "pass"},
+			name:        "different URI different key",
+			cfg1:        Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass"},
+			cfg2:        Config{URI: "grpc://localhost:8080", Username: "user", Password: "pass"},
 			shouldMatch: false,
 		},
 		{
-			name: "different username different key",
-			cfg1: Config{URI: "grpc://localhost:31337", Username: "user1", Password: "pass"},
-			cfg2: Config{URI: "grpc://localhost:31337", Username: "user2", Password: "pass"},
+			name:        "different username different key",
+			cfg1:        Config{URI: "grpc://localhost:31337", Username: "user1", Password: "pass"},
+			cfg2:        Config{URI: "grpc://localhost:31337", Username: "user2", Password: "pass"},
 			shouldMatch: false,
 		},
 		{
-			name: "different password different key",
-			cfg1: Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass1"},
-			cfg2: Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass2"},
+			name:        "different password different key",
+			cfg1:        Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass1"},
+			cfg2:        Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass2"},
 			shouldMatch: false,
 		},
 		{
-			name: "different skipVerify different key",
-			cfg1: Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: false},
-			cfg2: Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: true},
+			name:        "different skipVerify different key",
+			cfg1:        Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: false},
+			cfg2:        Config{URI: "grpc://localhost:31337", Username: "user", Password: "pass", SkipVerify: true},
 			shouldMatch: false,
 		},
 		{
-			name: "empty configs same key",
-			cfg1: Config{},
-			cfg2: Config{},
+			name:        "empty configs same key",
+			cfg1:        Config{},
+			cfg2:        Config{},
 			shouldMatch: true,
 		},
 	}

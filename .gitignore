@@ -18,6 +18,7 @@ duckarrow-prod.sql
 
 docs
 CLAUDE.md
+AGENTS.md
 .claude
 # OS
 .DS_Store

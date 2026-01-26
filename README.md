@@ -148,6 +148,34 @@ SELECT duckarrow_configure(uri, username, password, true);
 - Set `skip_verify = true` only for development/testing with self-signed certificates
 - For production, use properly signed certificates and keep verification enabled
 
+### Password Security
+
+**⚠️ Security Notice**: DuckDB v1.2.0 CLI displays all function parameters in plain text.
+To avoid exposing passwords in terminal history or screen sharing:
+
+**Option 1 - Environment Variable (Recommended)**:
+```bash
+export DUCKARROW_PASSWORD='your_secret_password'
+export DUCKARROW_USERNAME='your_username'  # Optional
+duckdb <<EOF
+  LOAD './build/duckarrow.duckdb_extension';
+  SELECT duckarrow_configure('grpc+tls://localhost:31337', 'username', '', true);
+  SELECT * FROM duckarrow."TableName" LIMIT 10;
+EOF
+```
+
+**Option 2 - Traditional (Password visible in CLI)**:
+```sql
+SELECT duckarrow_configure('grpc+tls://localhost:31337', 'username', 'password');
+-- ⚠️ Password will be visible in terminal and duckdb history
+```
+
+**Environment Variables**:
+- `DUCKARROW_PASSWORD`: Password fallback when password parameter is empty string
+- `DUCKARROW_USERNAME`: Username fallback when username parameter is empty string
+
+**Priority Order**: Function parameter > Environment variable > Empty string
+
 ### Query Syntax
 
 **Replacement scan (recommended):**
