@@ -13,6 +13,7 @@ import "C"
 import (
 	"duckdb"
 	"fmt"
+	"os"
 	"runtime"
 	"unsafe"
 
@@ -38,10 +39,10 @@ const (
 // Parameters:
 //   - info: Function execution context for error reporting
 //   - input: Data chunk containing three or four parameters:
-//     - uri (VARCHAR): gRPC URI (required)
-//     - username (VARCHAR): Authentication username (optional, can be empty)
-//     - password (VARCHAR): Authentication password (optional, can be empty)
-//     - skip_verify (BOOLEAN): Skip TLS certificate verification (optional, defaults to false)
+//   - uri (VARCHAR): gRPC URI (required)
+//   - username (VARCHAR): Authentication username (optional, can be empty)
+//   - password (VARCHAR): Authentication password (optional, can be empty)
+//   - skip_verify (BOOLEAN): Skip TLS certificate verification (optional, defaults to false)
 //   - output: Output vector for the result message
 //
 // Thread safety: Uses runtime.LockOSThread() as required for CGO callbacks.
@@ -122,16 +123,26 @@ func duckarrow_configure_callback(info C.duckdb_function_info, input C.duckdb_da
 			return
 		}
 
-		// Extract username (use empty string if NULL)
+		// Extract username (use empty string if NULL or on error)
 		var username string
 		if usernameValidity == nil || rowIsValid(usernameValidity, uint64(i), uint64(inputSize)) {
-			username, _ = extractString(usernameDataPtr, i)
+			username, _ = extractString(usernameDataPtr, i) // Error ok: empty triggers env var fallback
 		}
 
-		// Extract password (use empty string if NULL)
+		// Fallback to environment variable if username is empty string
+		if username == "" {
+			username = os.Getenv("DUCKARROW_USERNAME")
+		}
+
+		// Extract password (use empty string if NULL or on error)
 		var password string
 		if passwordValidity == nil || rowIsValid(passwordValidity, uint64(i), uint64(inputSize)) {
-			password, _ = extractString(passwordDataPtr, i)
+			password, _ = extractString(passwordDataPtr, i) // Error ok: empty triggers env var fallback
+		}
+
+		// Fallback to environment variable if password is empty string
+		if password == "" {
+			password = os.Getenv("DUCKARROW_PASSWORD")
 		}
 
 		// Extract skip_verify (default to false for security)
