@@ -114,8 +114,8 @@ jobs:
       - name: Build extension
         run: make build GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }}
         env:
-          # Allow -undefined flag for macOS to resolve DuckDB symbols at runtime
-          CGO_LDFLAGS_ALLOW: '-undefined|-Wl,-undefined'
+          # Allow linker flags for runtime symbol resolution (macOS and Windows)
+          CGO_LDFLAGS_ALLOW: '-undefined|-Wl,-undefined|-Wl,--unresolved-symbols=.*'
 
       - uses: actions/upload-artifact@v4
         with:

@@ -22,7 +22,7 @@ package main
 #cgo windows CFLAGS: -DDUCKARROW_STORAGE_EXPORTS
 #cgo LDFLAGS: -L${SRCDIR}/build/cpp -lduckarrow_storage
 #cgo linux LDFLAGS: -lstdc++
-#cgo windows LDFLAGS: -lstdc++
+#cgo windows LDFLAGS: -lstdc++ -Wl,--unresolved-symbols=ignore-all
 #cgo darwin LDFLAGS: -lc++ -Wl,-undefined,dynamic_lookup
 #include <stdlib.h>
 #include <string.h>
