@@ -10,20 +10,29 @@
 // CGO generates _cgo_export.h with declarations for //export functions.
 // This file includes those declarations and calls the registration functions.
 //
+// On Windows (DUCKARROW_NO_CPP_STORAGE), the C++ storage extension is not
+// available due to linker limitations, so we provide stub implementations.
+//
 //===----------------------------------------------------------------------===//
 
 #include <stdlib.h>
 #include <stdbool.h>
 
 #ifdef DUCKARROW_NO_CPP_STORAGE
+
 // Stub implementations when C++ storage extension is not available (Windows)
 bool duckarrow_register_storage_extension(void* db_handle) {
     (void)db_handle;
     return true;  // Return success but do nothing
 }
+
+void duckarrow_register_go_callbacks(void) {
+    // No-op on Windows - C++ storage extension not available
+}
+
 #else
+
 #include "go_callbacks.h"
-#endif
 
 // These are declared in the cgo-generated _cgo_export.h header.
 // We forward-declare them here to avoid circular include issues during build.
@@ -41,9 +50,7 @@ extern void duckarrow_go_scan_free(DuckArrowScanHandle handle);
 
 // duckarrow_register_go_callbacks registers all Go callbacks with the C++ storage extension.
 // This must be called once during extension initialization, after the storage extension is registered.
-// On Windows, C++ storage extension is not available due to linker limitations.
 void duckarrow_register_go_callbacks(void) {
-#ifndef DUCKARROW_NO_CPP_STORAGE
     duckarrow_register_connect(duckarrow_go_connect);
     duckarrow_register_list_schemas(duckarrow_go_list_schemas);
     duckarrow_register_list_tables(duckarrow_go_list_tables);
@@ -57,5 +64,6 @@ void duckarrow_register_go_callbacks(void) {
     duckarrow_register_scan_init(duckarrow_go_scan_init);
     duckarrow_register_scan_next(duckarrow_go_scan_next);
     duckarrow_register_scan_free(duckarrow_go_scan_free);
-#endif
 }
+
+#endif
