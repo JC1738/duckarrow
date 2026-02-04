@@ -78,9 +78,12 @@ endif()
 
 # Platform-specific output settings
 if(APPLE)
+    # Allow undefined symbols - they'll be resolved at load time when
+    # the extension is loaded into DuckDB (which provides these symbols)
     set_target_properties(duckarrow_storage PROPERTIES
         SUFFIX ".dylib"
         INSTALL_RPATH "@loader_path"
+        LINK_FLAGS "-undefined dynamic_lookup"
     )
 elseif(UNIX)
     set_target_properties(duckarrow_storage PROPERTIES
