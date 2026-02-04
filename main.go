@@ -19,11 +19,9 @@ package main
 
 /*
 #cgo CFLAGS: -I${SRCDIR}/duckdb-go-api -I${SRCDIR}/cpp -DDUCKDB_API_EXCLUDE_FUNCTIONS=1
-#cgo windows CFLAGS: -DDUCKARROW_STORAGE_EXPORTS
-#cgo LDFLAGS: -L${SRCDIR}/build/cpp -lduckarrow_storage
-#cgo linux LDFLAGS: -lstdc++
-#cgo windows LDFLAGS: -lstdc++ -Wl,--unresolved-symbols=ignore-all
-#cgo darwin LDFLAGS: -lc++ -Wl,-undefined,dynamic_lookup
+#cgo windows CFLAGS: -DDUCKARROW_STORAGE_EXPORTS -DDUCKARROW_NO_CPP_STORAGE
+#cgo linux LDFLAGS: -L${SRCDIR}/build/cpp -lduckarrow_storage -lstdc++
+#cgo darwin LDFLAGS: -L${SRCDIR}/build/cpp -lduckarrow_storage -lc++ -Wl,-undefined,dynamic_lookup
 #include <stdlib.h>
 #include <string.h>
 #include <duckdb.h>
@@ -107,14 +105,19 @@ func duckarrow_init_c_api(info unsafe.Pointer, access unsafe.Pointer) bool {
 	RegisterReplacementScan(db)
 
 	// Register the storage extension for ATTACH ... (TYPE duckarrow) syntax
-	if !C.duckarrow_register_storage_extension(db.Ptr) {
-		fmt.Println("[duckarrow] Failed to register storage extension")
-		return false
-	}
+	// Skip on Windows - C++ storage extension not available due to linker limitations
+	if runtime.GOOS != "windows" {
+		if !C.duckarrow_register_storage_extension(db.Ptr) {
+			fmt.Println("[duckarrow] Failed to register storage extension")
+			return false
+		}
 
-	// Register Go callbacks with C++ for schema/table/column metadata queries
-	// These are called by the DuckArrow catalog when querying Flight SQL servers
-	C.duckarrow_register_go_callbacks()
+		// Register Go callbacks with C++ for schema/table/column metadata queries
+		// These are called by the DuckArrow catalog when querying Flight SQL servers
+		C.duckarrow_register_go_callbacks()
+	} else {
+		fmt.Println("[duckarrow] Note: ATTACH functionality not available on Windows")
+	}
 
 	fmt.Printf("[duckarrow] Extension %s loaded successfully\n", Version)
 	return true

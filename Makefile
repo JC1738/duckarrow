@@ -70,12 +70,19 @@ cmake-configure:
 		-DBUILD_SHARED_LIBS=OFF \
 		-DDUCKDB_VERSION=$(DUCKDB_VERSION)
 
-# Build C++ static library
+# Build C++ static library (skip on Windows - not supported)
 cmake-build: cmake-configure
+ifneq ($(GOOS),windows)
 	cmake --build $(CPP_BUILD_DIR) --config Release
+endif
 
 # Build the extension
+# On Windows, skip C++ library (ATTACH not supported due to linker limitations)
+ifeq ($(GOOS),windows)
+build: deps
+else
 build: deps cmake-build
+endif
 	CGO_ENABLED=1 GOOS=$(GOOS) GOARCH=$(GOARCH) \
 		go build -buildmode=c-shared -ldflags="-X main.Version=$(EXTENSION_VERSION)" -o $(OUTPUT) ./
 	cd $(OUTPUT_DIR) && python3 ../../$(SCRIPTS_DIR)/append_extension_metadata.py \
