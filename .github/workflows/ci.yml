@@ -41,6 +41,9 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y cmake build-essential
+      - name: Download DuckDB C++ header
+        run: |
+          curl -L -o duckdb-go-api/duckdb.hpp https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb.hpp
       - name: Run unit tests
         run: make test-unit
 
@@ -101,6 +104,10 @@ jobs:
         run: |
           echo "CC=gcc" >> $env:GITHUB_ENV
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+
+      - name: Download DuckDB C++ header
+        run: |
+          curl -L -o duckdb-go-api/duckdb.hpp https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb.hpp
 
       - name: Build extension
         run: make build GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }}
