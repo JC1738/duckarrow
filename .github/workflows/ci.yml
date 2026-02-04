@@ -43,7 +43,8 @@ jobs:
           sudo apt-get install -y cmake build-essential
       - name: Download DuckDB C++ header
         run: |
-          curl -L -o duckdb-go-api/duckdb.hpp https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb.hpp
+          curl -L -o /tmp/libduckdb-src.zip https://github.com/duckdb/duckdb/releases/download/v1.4.3/libduckdb-src.zip
+          unzip -p /tmp/libduckdb-src.zip duckdb.hpp > duckdb-go-api/duckdb.hpp
       - name: Run unit tests
         run: make test-unit
 
@@ -107,7 +108,8 @@ jobs:
 
       - name: Download DuckDB C++ header
         run: |
-          curl -L -o duckdb-go-api/duckdb.hpp https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb.hpp
+          curl -L -o /tmp/libduckdb-src.zip https://github.com/duckdb/duckdb/releases/download/v1.4.3/libduckdb-src.zip
+          unzip -p /tmp/libduckdb-src.zip duckdb.hpp > duckdb-go-api/duckdb.hpp
 
       - name: Build extension
         run: make build GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }}
@@ -130,7 +132,7 @@ jobs:
       - name: Install DuckDB
         # NOTE: Version must match DUCKDB_VERSION in Makefile
         run: |
-          wget https://github.com/duckdb/duckdb/releases/download/v1.2.0/duckdb_cli-linux-amd64.zip
+          wget https://github.com/duckdb/duckdb/releases/download/v1.4.3/duckdb_cli-linux-amd64.zip
           unzip duckdb_cli-linux-amd64.zip
           chmod +x duckdb
           ./duckdb --version

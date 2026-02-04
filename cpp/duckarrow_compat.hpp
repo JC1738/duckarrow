@@ -6,15 +6,46 @@
 //
 //===----------------------------------------------------------------------===//
 //
-// DuckDB v1.2.0 compatibility definitions.
-// These structs are forward-declared in the bundled duckdb.hpp but not defined.
-// We provide minimal definitions here for storage extension compatibility.
+// DuckDB compatibility definitions.
+// These structs are forward-declared in the bundled duckdb.hpp but their full
+// definitions are not included in the amalgamated header. We provide minimal
+// definitions here for storage extension compatibility.
+//
+// NOTE: These definitions are needed for ALL DuckDB versions when using the
+// amalgamated header (duckdb.hpp), as the full definitions are only available
+// in the complete DuckDB source tree, not the single-file distribution.
 //
 //===----------------------------------------------------------------------===//
 
 #pragma once
 
 #include "duckdb.hpp"
+
+//===----------------------------------------------------------------------===//
+// DuckDB Version Detection
+//===----------------------------------------------------------------------===//
+// Version macro system for conditional compilation based on DuckDB version.
+// Format: MAJOR*1000000 + MINOR*1000 + PATCH (e.g., v1.4.3 = 1004003)
+//
+// The DUCKARROW_DUCKDB_VERSION macro should be defined by CMake based on the
+// DUCKDB_VERSION passed from the Makefile. If not defined, we default to the
+// current target version (v1.4.3).
+//===----------------------------------------------------------------------===//
+
+#ifndef DUCKARROW_DUCKDB_VERSION
+#define DUCKARROW_DUCKDB_VERSION 1004003  // Default to v1.4.3
+#endif
+
+// Version constants for comparison
+#define DUCKARROW_DUCKDB_V1_2_0  1002000
+#define DUCKARROW_DUCKDB_V1_4_3  1004003
+
+// Helper macros for version checking
+#define DUCKARROW_DUCKDB_VERSION_AT_LEAST(major, minor, patch) \
+    (DUCKARROW_DUCKDB_VERSION >= ((major) * 1000000 + (minor) * 1000 + (patch)))
+
+#define DUCKARROW_DUCKDB_VERSION_LESS_THAN(major, minor, patch) \
+    (DUCKARROW_DUCKDB_VERSION < ((major) * 1000000 + (minor) * 1000 + (patch)))
 
 namespace duckdb {
 
@@ -91,25 +122,31 @@ struct CreateTableInfo : public CreateInfo {
 //===--------------------------------------------------------------------===//
 // IndexInfo - index metadata
 //===--------------------------------------------------------------------===//
-// Not defined in bundled header but needed for TableStorageInfo.
+// Not defined in bundled header v1.2.0 but needed for TableStorageInfo.
+// Fully defined in DuckDB v1.4.0+, so only define for earlier versions.
 
+#if DUCKARROW_DUCKDB_VERSION_LESS_THAN(1, 4, 0)
 struct IndexInfo {
 	bool is_unique = false;
 	bool is_primary = false;
 	bool is_foreign = false;
 	string index_name;
 };
+#endif
 
 //===--------------------------------------------------------------------===//
 // TableStorageInfo - table storage metadata
 //===--------------------------------------------------------------------===//
-// Forward declared in duckdb.hpp but not defined in the bundled header.
+// Forward declared in duckdb.hpp but not defined in the bundled header v1.2.0.
+// Fully defined in DuckDB v1.4.0+, so only define for earlier versions.
 
+#if DUCKARROW_DUCKDB_VERSION_LESS_THAN(1, 4, 0)
 class TableStorageInfo {
 public:
 	optional_idx cardinality;
 	vector<IndexInfo> index_info;
 };
+#endif
 
 //===--------------------------------------------------------------------===//
 // TableCatalogEntry - base class for table entries

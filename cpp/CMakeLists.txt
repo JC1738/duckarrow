@@ -18,11 +18,48 @@ endif()
 # Include directories
 include_directories(${DUCKDB_INCLUDE_DIR})
 
+#===----------------------------------------------------------------------===//
+# DuckDB Version Configuration
+#===----------------------------------------------------------------------===//
+# Parse DUCKDB_VERSION (e.g., "v1.4.3") and convert to numeric format:
+# MAJOR*1000000 + MINOR*1000 + PATCH (e.g., v1.4.3 = 1004003)
+# Default to v1.4.3 if not specified.
+#===----------------------------------------------------------------------===//
+
+if(NOT DEFINED DUCKDB_VERSION)
+    set(DUCKDB_VERSION "v1.4.3")
+    message(STATUS "DUCKDB_VERSION not specified, defaulting to ${DUCKDB_VERSION}")
+endif()
+
+# Strip leading 'v' if present and parse version components
+string(REGEX REPLACE "^v" "" DUCKDB_VERSION_CLEAN "${DUCKDB_VERSION}")
+string(REPLACE "." ";" DUCKDB_VERSION_LIST "${DUCKDB_VERSION_CLEAN}")
+
+list(LENGTH DUCKDB_VERSION_LIST DUCKDB_VERSION_LEN)
+if(DUCKDB_VERSION_LEN LESS 3)
+    message(FATAL_ERROR "Invalid DUCKDB_VERSION format: ${DUCKDB_VERSION}. Expected vX.Y.Z or X.Y.Z")
+endif()
+
+list(GET DUCKDB_VERSION_LIST 0 DUCKDB_VERSION_MAJOR)
+list(GET DUCKDB_VERSION_LIST 1 DUCKDB_VERSION_MINOR)
+list(GET DUCKDB_VERSION_LIST 2 DUCKDB_VERSION_PATCH)
+
+# Calculate numeric version: MAJOR*1000000 + MINOR*1000 + PATCH
+math(EXPR DUCKARROW_DUCKDB_VERSION_NUM
+    "${DUCKDB_VERSION_MAJOR} * 1000000 + ${DUCKDB_VERSION_MINOR} * 1000 + ${DUCKDB_VERSION_PATCH}")
+
+message(STATUS "DuckDB version: ${DUCKDB_VERSION} -> ${DUCKARROW_DUCKDB_VERSION_NUM}")
+
 # Collect source files
 file(GLOB_RECURSE SOURCES "*.cpp")
 
 # Create shared library for the storage extension layer
 add_library(duckarrow_storage SHARED ${SOURCES})
+
+# Define DuckDB version for conditional compilation
+target_compile_definitions(duckarrow_storage PRIVATE
+    DUCKARROW_DUCKDB_VERSION=${DUCKARROW_DUCKDB_VERSION_NUM}
+)
 
 # Export symbols for Go callback registration
 # On Unix, use visibility=default for exported symbols

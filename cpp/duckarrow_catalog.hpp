@@ -72,12 +72,48 @@ public:
 	void ScanSchemas(duckdb::ClientContext &context,
 	                 std::function<void(duckdb::SchemaCatalogEntry &)> callback) override;
 
+#if DUCKARROW_DUCKDB_VERSION_AT_LEAST(1, 4, 0)
+	// v1.4.0+: LookupSchema replaces GetSchema with EntryLookupInfo parameter
+	duckdb::optional_ptr<duckdb::SchemaCatalogEntry>
+	LookupSchema(duckdb::CatalogTransaction transaction,
+	             const duckdb::EntryLookupInfo &schema_lookup,
+	             duckdb::OnEntryNotFound if_not_found) override;
+#else
+	// v1.2.0: GetSchema with string schema name
 	duckdb::optional_ptr<duckdb::SchemaCatalogEntry>
 	GetSchema(duckdb::CatalogTransaction transaction,
 	          const duckdb::string &schema_name,
 	          duckdb::OnEntryNotFound if_not_found,
 	          duckdb::QueryErrorContext error_context) override;
+#endif
 
+#if DUCKARROW_DUCKDB_VERSION_AT_LEAST(1, 4, 0)
+	// v1.4.0+: Plan* methods return PhysicalOperator& and take PhysicalPlanGenerator
+	duckdb::PhysicalOperator &
+	PlanCreateTableAs(duckdb::ClientContext &context,
+	                  duckdb::PhysicalPlanGenerator &planner,
+	                  duckdb::LogicalCreateTable &op,
+	                  duckdb::PhysicalOperator &plan) override;
+
+	duckdb::PhysicalOperator &
+	PlanInsert(duckdb::ClientContext &context,
+	           duckdb::PhysicalPlanGenerator &planner,
+	           duckdb::LogicalInsert &op,
+	           duckdb::optional_ptr<duckdb::PhysicalOperator> plan) override;
+
+	duckdb::PhysicalOperator &
+	PlanDelete(duckdb::ClientContext &context,
+	           duckdb::PhysicalPlanGenerator &planner,
+	           duckdb::LogicalDelete &op,
+	           duckdb::PhysicalOperator &plan) override;
+
+	duckdb::PhysicalOperator &
+	PlanUpdate(duckdb::ClientContext &context,
+	           duckdb::PhysicalPlanGenerator &planner,
+	           duckdb::LogicalUpdate &op,
+	           duckdb::PhysicalOperator &plan) override;
+#else
+	// v1.2.0: Plan* methods return unique_ptr and don't take PhysicalPlanGenerator
 	duckdb::unique_ptr<duckdb::PhysicalOperator>
 	PlanCreateTableAs(duckdb::ClientContext &context,
 	                  duckdb::LogicalCreateTable &op,
@@ -97,6 +133,7 @@ public:
 	PlanUpdate(duckdb::ClientContext &context,
 	           duckdb::LogicalUpdate &op,
 	           duckdb::unique_ptr<duckdb::PhysicalOperator> plan) override;
+#endif
 
 	duckdb::unique_ptr<duckdb::LogicalOperator>
 	BindCreateIndex(duckdb::Binder &binder,
@@ -127,6 +164,11 @@ public:
 	DuckArrowConnectionHandle GetConnectionHandle() const;
 
 private:
+	// Helper function to get or create schema entry (used by GetSchema/LookupSchema)
+	duckdb::optional_ptr<duckdb::SchemaCatalogEntry>
+	GetOrCreateSchemaEntry(const duckdb::string &schema_name,
+	                       duckdb::OnEntryNotFound if_not_found);
+
 	DuckArrowOptions options;
 	DuckArrowConnectionHandle connection_handle;
 

@@ -1,4 +1,4 @@
-DUCKDB_VERSION := v1.2.0
+DUCKDB_VERSION := v1.4.3
 EXTENSION_NAME := duckarrow
 # Extract version from git tag, fall back to "dev" for local builds
 EXTENSION_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo "dev")
@@ -59,7 +59,8 @@ cmake-configure:
 	@mkdir -p $(CPP_BUILD_DIR)
 	cmake -S $(CPP_DIR) -B $(CPP_BUILD_DIR) \
 		-DCMAKE_BUILD_TYPE=Release \
-		-DBUILD_SHARED_LIBS=OFF
+		-DBUILD_SHARED_LIBS=OFF \
+		-DDUCKDB_VERSION=$(DUCKDB_VERSION)
 
 # Build C++ static library
 cmake-build: cmake-configure

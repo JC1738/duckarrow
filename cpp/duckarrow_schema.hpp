@@ -47,11 +47,18 @@ public:
 	void Scan(duckdb::CatalogType type,
 	          const std::function<void(duckdb::CatalogEntry &)> &callback) override;
 
-	// Get a specific entry (table, view, etc.) by name
+#if DUCKARROW_DUCKDB_VERSION_AT_LEAST(1, 4, 0)
+	// v1.4.0+: LookupEntry replaces GetEntry with EntryLookupInfo parameter
+	duckdb::optional_ptr<duckdb::CatalogEntry>
+	LookupEntry(duckdb::CatalogTransaction transaction,
+	            const duckdb::EntryLookupInfo &lookup_info) override;
+#else
+	// v1.2.0: GetEntry with explicit type and name parameters
 	duckdb::optional_ptr<duckdb::CatalogEntry>
 	GetEntry(duckdb::CatalogTransaction transaction,
 	         duckdb::CatalogType type,
 	         const duckdb::string &name) override;
+#endif
 
 	//===----------------------------------------------------------------===//
 	// Create Operations (not supported - Flight SQL is read-only)
@@ -114,6 +121,10 @@ public:
 	DuckArrowConnectionHandle GetConnectionHandle() const;
 
 private:
+	// Helper function to look up or create an entry (used by GetEntry/LookupEntry)
+	duckdb::optional_ptr<duckdb::CatalogEntry>
+	GetOrCreateEntry(duckdb::CatalogType type, const duckdb::string &entry_name);
+
 	// Connection handle for Flight SQL queries
 	DuckArrowConnectionHandle connection_handle;
 

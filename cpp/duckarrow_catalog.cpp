@@ -94,11 +94,10 @@ void DuckArrowCatalog::ScanSchemas(duckdb::ClientContext & /* context */,
 	duckarrow_free_schema_list(&schema_list);
 }
 
+// Helper function to get or create schema entry (shared by GetSchema/LookupSchema)
 duckdb::optional_ptr<duckdb::SchemaCatalogEntry>
-DuckArrowCatalog::GetSchema(duckdb::CatalogTransaction /* transaction */,
-                            const duckdb::string &schema_name,
-                            duckdb::OnEntryNotFound if_not_found,
-                            duckdb::QueryErrorContext /* error_context */) {
+DuckArrowCatalog::GetOrCreateSchemaEntry(const duckdb::string &schema_name,
+                                         duckdb::OnEntryNotFound if_not_found) {
 	std::lock_guard<std::mutex> guard(schema_cache_lock);
 
 	// Check if schema already exists in cache
@@ -129,6 +128,60 @@ DuckArrowCatalog::GetSchema(duckdb::CatalogTransaction /* transaction */,
 	return result;
 }
 
+#if DUCKARROW_DUCKDB_VERSION_AT_LEAST(1, 4, 0)
+// v1.4.0+: LookupSchema with EntryLookupInfo
+duckdb::optional_ptr<duckdb::SchemaCatalogEntry>
+DuckArrowCatalog::LookupSchema(duckdb::CatalogTransaction /* transaction */,
+                               const duckdb::EntryLookupInfo &schema_lookup,
+                               duckdb::OnEntryNotFound if_not_found) {
+	return GetOrCreateSchemaEntry(schema_lookup.GetEntryName(), if_not_found);
+}
+#else
+// v1.2.0: GetSchema with string schema name
+duckdb::optional_ptr<duckdb::SchemaCatalogEntry>
+DuckArrowCatalog::GetSchema(duckdb::CatalogTransaction /* transaction */,
+                            const duckdb::string &schema_name,
+                            duckdb::OnEntryNotFound if_not_found,
+                            duckdb::QueryErrorContext /* error_context */) {
+	return GetOrCreateSchemaEntry(schema_name, if_not_found);
+}
+#endif
+
+#if DUCKARROW_DUCKDB_VERSION_AT_LEAST(1, 4, 0)
+// v1.4.0+: Plan* methods return PhysicalOperator& and take PhysicalPlanGenerator
+duckdb::PhysicalOperator &
+DuckArrowCatalog::PlanCreateTableAs(duckdb::ClientContext & /* context */,
+                                    duckdb::PhysicalPlanGenerator & /* planner */,
+                                    duckdb::LogicalCreateTable & /* op */,
+                                    duckdb::PhysicalOperator & /* plan */) {
+	throw duckdb::NotImplementedException("DuckArrow does not support CREATE TABLE AS - Flight SQL is read-only");
+}
+
+duckdb::PhysicalOperator &
+DuckArrowCatalog::PlanInsert(duckdb::ClientContext & /* context */,
+                             duckdb::PhysicalPlanGenerator & /* planner */,
+                             duckdb::LogicalInsert & /* op */,
+                             duckdb::optional_ptr<duckdb::PhysicalOperator> /* plan */) {
+	throw duckdb::NotImplementedException("DuckArrow does not support INSERT - Flight SQL is read-only");
+}
+
+duckdb::PhysicalOperator &
+DuckArrowCatalog::PlanDelete(duckdb::ClientContext & /* context */,
+                             duckdb::PhysicalPlanGenerator & /* planner */,
+                             duckdb::LogicalDelete & /* op */,
+                             duckdb::PhysicalOperator & /* plan */) {
+	throw duckdb::NotImplementedException("DuckArrow does not support DELETE - Flight SQL is read-only");
+}
+
+duckdb::PhysicalOperator &
+DuckArrowCatalog::PlanUpdate(duckdb::ClientContext & /* context */,
+                             duckdb::PhysicalPlanGenerator & /* planner */,
+                             duckdb::LogicalUpdate & /* op */,
+                             duckdb::PhysicalOperator & /* plan */) {
+	throw duckdb::NotImplementedException("DuckArrow does not support UPDATE - Flight SQL is read-only");
+}
+#else
+// v1.2.0: Plan* methods return unique_ptr
 duckdb::unique_ptr<duckdb::PhysicalOperator>
 DuckArrowCatalog::PlanCreateTableAs(duckdb::ClientContext & /* context */,
                                     duckdb::LogicalCreateTable & /* op */,
@@ -156,6 +209,7 @@ DuckArrowCatalog::PlanUpdate(duckdb::ClientContext & /* context */,
                              duckdb::unique_ptr<duckdb::PhysicalOperator> /* plan */) {
 	throw duckdb::NotImplementedException("DuckArrow does not support UPDATE - Flight SQL is read-only");
 }
+#endif
 
 duckdb::unique_ptr<duckdb::LogicalOperator>
 DuckArrowCatalog::BindCreateIndex(duckdb::Binder & /* binder */,

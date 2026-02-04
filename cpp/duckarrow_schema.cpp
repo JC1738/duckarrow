@@ -77,10 +77,10 @@ void DuckArrowSchemaEntry::Scan(duckdb::CatalogType /* type */,
 	throw duckdb::NotImplementedException("DuckArrowSchemaEntry::Scan without context not supported");
 }
 
+// Helper function to look up or create an entry (shared by GetEntry/LookupEntry)
 duckdb::optional_ptr<duckdb::CatalogEntry>
-DuckArrowSchemaEntry::GetEntry(duckdb::CatalogTransaction /* transaction */,
-                               duckdb::CatalogType type,
-                               const duckdb::string &entry_name) {
+DuckArrowSchemaEntry::GetOrCreateEntry(duckdb::CatalogType type,
+                                       const duckdb::string &entry_name) {
 	// Only support looking up tables for now
 	if (type != duckdb::CatalogType::TABLE_ENTRY) {
 		return nullptr;
@@ -113,6 +113,23 @@ DuckArrowSchemaEntry::GetEntry(duckdb::CatalogTransaction /* transaction */,
 	table_cache[table_name] = std::move(table_entry);
 	return raw_ptr;
 }
+
+#if DUCKARROW_DUCKDB_VERSION_AT_LEAST(1, 4, 0)
+// v1.4.0+: LookupEntry with EntryLookupInfo
+duckdb::optional_ptr<duckdb::CatalogEntry>
+DuckArrowSchemaEntry::LookupEntry(duckdb::CatalogTransaction /* transaction */,
+                                  const duckdb::EntryLookupInfo &lookup_info) {
+	return GetOrCreateEntry(lookup_info.GetCatalogType(), lookup_info.GetEntryName());
+}
+#else
+// v1.2.0: GetEntry with explicit type and name
+duckdb::optional_ptr<duckdb::CatalogEntry>
+DuckArrowSchemaEntry::GetEntry(duckdb::CatalogTransaction /* transaction */,
+                               duckdb::CatalogType type,
+                               const duckdb::string &entry_name) {
+	return GetOrCreateEntry(type, entry_name);
+}
+#endif
 
 //===--------------------------------------------------------------------===//
 // Create Operations (not supported - Flight SQL is read-only)
