@@ -19,6 +19,7 @@ package main
 
 /*
 #cgo CFLAGS: -I${SRCDIR}/duckdb-go-api -I${SRCDIR}/cpp -DDUCKDB_API_EXCLUDE_FUNCTIONS=1
+#cgo windows CFLAGS: -DDUCKARROW_STORAGE_EXPORTS
 #cgo LDFLAGS: -L${SRCDIR}/build/cpp -lduckarrow_storage
 #cgo linux LDFLAGS: -lstdc++
 #cgo windows LDFLAGS: -lstdc++
