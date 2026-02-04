@@ -46,7 +46,7 @@ import (
 
 //export duckarrow_init_c_api
 func duckarrow_init_c_api(info unsafe.Pointer, access unsafe.Pointer) bool {
-	api, err := duckdb.Init("v1.2.0", info, access)
+	api, err := duckdb.Init("v1.4.3", info, access)
 	if err != nil {
 		return false
 	}
