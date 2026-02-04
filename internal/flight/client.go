@@ -151,7 +151,7 @@ func (c *Client) getSchemasViaADBC(ctx context.Context) ([]string, error) {
 	var schemas []string
 
 	for reader.Next() {
-		rec := reader.Record()
+		rec := reader.RecordBatch()
 
 		// GetObjects returns schema with catalog_name (utf8) and catalog_db_schemas (list<struct>)
 		// The db_schema_name is inside the nested struct
@@ -216,7 +216,7 @@ func (c *Client) getSchemasViaSQL(ctx context.Context) ([]string, error) {
 	var schemas []string
 
 	for result.Reader.Next() {
-		rec := result.Reader.Record()
+		rec := result.Reader.RecordBatch()
 		if rec.NumCols() < 1 {
 			continue
 		}
@@ -270,7 +270,7 @@ func (c *Client) getTablesViaADBC(ctx context.Context, schema string) ([]TableIn
 	var tables []TableInfo
 
 	for reader.Next() {
-		rec := reader.Record()
+		rec := reader.RecordBatch()
 
 		// GetObjects returns schema with catalog_name (utf8) and catalog_db_schemas (list<struct>)
 		// The db_schema contains db_schema_name and db_schema_tables (list<struct>)
@@ -372,7 +372,7 @@ func (c *Client) getTablesViaSQL(ctx context.Context, schema string) ([]TableInf
 	var tables []TableInfo
 
 	for result.Reader.Next() {
-		rec := result.Reader.Record()
+		rec := result.Reader.RecordBatch()
 		if rec.NumCols() < 1 {
 			continue
 		}
@@ -431,7 +431,7 @@ func (c *Client) getColumnsViaADBC(ctx context.Context, schema, table string) ([
 	var columns []ColumnInfo
 
 	for reader.Next() {
-		rec := reader.Record()
+		rec := reader.RecordBatch()
 
 		// GetObjects returns: catalog_name (utf8), catalog_db_schemas (list<struct>)
 		// catalog_db_schemas contains: db_schema_name (utf8), db_schema_tables (list<struct>)
@@ -580,7 +580,7 @@ func (c *Client) getColumnsViaSQL(ctx context.Context, schema, table string) ([]
 	var columns []ColumnInfo
 
 	for result.Reader.Next() {
-		rec := result.Reader.Record()
+		rec := result.Reader.RecordBatch()
 		if rec.NumCols() < 4 {
 			continue
 		}
