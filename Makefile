@@ -1,4 +1,7 @@
 DUCKDB_VERSION := v1.4.3
+# C Extension API version - separate from DuckDB release version
+# DuckDB v1.4.x still uses C API v1.2.0
+DUCKDB_API_VERSION := v1.2.0
 EXTENSION_NAME := duckarrow
 # Extract version from git tag, fall back to "dev" for local builds
 EXTENSION_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo "dev")
@@ -88,7 +91,7 @@ endif
 	cd $(OUTPUT_DIR) && python3 ../../$(SCRIPTS_DIR)/append_extension_metadata.py \
 		-l $(EXTENSION_NAME)$(EXT) \
 		-n $(EXTENSION_NAME) \
-		-dv $(DUCKDB_VERSION) \
+		-dv $(DUCKDB_API_VERSION) \
 		-ev $(EXTENSION_VERSION) \
 		-p $(PLATFORM)
 	@# Create symlink for test convenience (skip on Windows)
