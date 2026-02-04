@@ -1,4 +1,4 @@
-DUCKDB_VERSION := v1.4.3
+DUCKDB_VERSION := v1.2.0
 EXTENSION_NAME := duckarrow
 # Extract version from git tag, fall back to "dev" for local builds
 EXTENSION_VERSION := $(shell git describe --tags --exact-match 2>/dev/null || echo "dev")
