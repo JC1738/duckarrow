@@ -37,6 +37,10 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
+      - name: Install C++ toolchain (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
       - name: Run unit tests
         run: make test-unit
 
@@ -81,6 +85,17 @@ jobs:
         with:
           python-version: '3.x'
 
+      - name: Install C++ toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Install C++ toolchain (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
+
       - name: Setup CGO (Windows)
         if: runner.os == 'Windows'
         run: |
@@ -116,3 +131,8 @@ jobs:
 
       - name: Test extension load
         run: ./duckdb -unsigned -c "LOAD './extension/duckarrow.duckdb_extension';"
+
+      # NOTE: ATTACH tests (make test-attach) and other Flight SQL tests are skipped in CI
+      # because they require a running Flight SQL server at localhost:31337.
+      # These tests can be run locally with: make test-attach
+      # To enable in CI, a Flight SQL server would need to be started as a service.

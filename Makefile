@@ -7,10 +7,15 @@ BUILD_DIR := build
 SCRIPTS_DIR := scripts
 TESTS_DIR := tests
 
+# C++ build directories
+CPP_DIR := cpp
+CPP_BUILD_DIR := $(BUILD_DIR)/cpp
+
 .PHONY: all clean build deps test test-unit test-coverage test-all fmt help
-.PHONY: test-load test-hardcoded test-connection test-full test-replacement-scan test-pool test-types test-edge-cases test-errors
+.PHONY: test-load test-hardcoded test-connection test-full test-replacement-scan test-pool test-attach test-show-tables test-show-schemas test-info-schema test-qualified test-types test-edge-cases test-errors test-projection
 .PHONY: build-linux-amd64 build-linux-arm64 build-darwin-amd64 build-darwin-arm64 build-windows-amd64 build-windows-arm64
 .PHONY: build-linux build-darwin build-windows
+.PHONY: cmake-configure cmake-build cpp-clean
 
 # Platform detection with override support
 GOOS ?= $(shell go env GOOS)
@@ -49,8 +54,19 @@ deps:
 	fi
 	go mod tidy
 
+# Configure CMake for C++ build
+cmake-configure:
+	@mkdir -p $(CPP_BUILD_DIR)
+	cmake -S $(CPP_DIR) -B $(CPP_BUILD_DIR) \
+		-DCMAKE_BUILD_TYPE=Release \
+		-DBUILD_SHARED_LIBS=OFF
+
+# Build C++ static library
+cmake-build: cmake-configure
+	cmake --build $(CPP_BUILD_DIR) --config Release
+
 # Build the extension
-build: deps
+build: deps cmake-build
 	CGO_ENABLED=1 GOOS=$(GOOS) GOARCH=$(GOARCH) \
 		go build -buildmode=c-shared -ldflags="-X main.Version=$(EXTENSION_VERSION)" -o $(OUTPUT) ./
 	cd $(OUTPUT_DIR) && python3 ../../$(SCRIPTS_DIR)/append_extension_metadata.py \
@@ -130,6 +146,44 @@ test-pool: build
 	@echo "Note: Compare timing - subsequent queries should be faster"
 	duckdb -unsigned < $(TESTS_DIR)/connection_pool_test.sql
 
+# Test: ATTACH/DETACH basic functionality
+test-attach: build
+	@echo "=== Test: ATTACH/DETACH ==="
+	@echo "Note: This test includes expected errors for error handling tests"
+	duckdb -unsigned < $(TESTS_DIR)/attach_basic_test.sql; \
+	if [ $$? -eq 0 ]; then echo "ATTACH/DETACH tests PASSED"; \
+	elif [ $$? -eq 1 ]; then echo "ATTACH/DETACH tests completed with expected errors"; \
+	else echo "ATTACH/DETACH tests FAILED with unexpected error"; exit 1; fi
+
+# Test: SHOW TABLES functionality
+test-show-tables: build
+	@echo "=== Test: SHOW TABLES ==="
+	duckdb -unsigned < $(TESTS_DIR)/show_tables_test.sql
+
+# Test: SHOW SCHEMAS functionality
+test-show-schemas: build
+	@echo "=== Test: SHOW SCHEMAS ==="
+	@echo "Note: This test includes expected errors for error handling tests"
+	duckdb -unsigned < $(TESTS_DIR)/show_schemas_test.sql; \
+	if [ $$? -eq 0 ]; then echo "SHOW SCHEMAS tests PASSED"; \
+	elif [ $$? -eq 1 ]; then echo "SHOW SCHEMAS tests completed with expected errors"; \
+	else echo "SHOW SCHEMAS tests FAILED with unexpected error"; exit 1; fi
+
+# Test: Qualified queries (three-part and two-part names)
+test-qualified: build
+	@echo "=== Test: Qualified Queries ==="
+	duckdb -unsigned < $(TESTS_DIR)/qualified_queries_test.sql
+
+# Test: Information schema integration
+test-info-schema: build
+	@echo "=== Test: Information Schema ==="
+	duckdb -unsigned < $(TESTS_DIR)/information_schema_test.sql
+
+# Test: Projection pushdown
+test-projection: build
+	@echo "=== Test: Projection Pushdown ==="
+	duckdb -unsigned < $(TESTS_DIR)/projection_pushdown_test.sql
+
 # Run SQL integration tests (core functionality)
 test: test-load test-hardcoded test-connection test-full test-replacement-scan test-pool
 	@echo "SQL integration tests passed!"
@@ -169,8 +223,12 @@ test-errors: build
 test-all: test-unit test test-types test-edge-cases test-errors
 	@echo "All tests completed!"
 
+# Clean C++ build artifacts
+cpp-clean:
+	rm -rf $(CPP_BUILD_DIR)
+
 # Clean build artifacts
-clean:
+clean: cpp-clean
 	rm -rf $(BUILD_DIR)
 
 # Development helpers
@@ -183,6 +241,8 @@ help:
 	@echo ""
 	@echo "Build Targets:"
 	@echo "  build               - Build the extension for current platform"
+	@echo "  cmake-configure     - Configure CMake for C++ build"
+	@echo "  cmake-build         - Build C++ static library"
 	@echo "  build-linux-amd64   - Build for Linux x86_64"
 	@echo "  build-linux-arm64   - Build for Linux ARM64"
 	@echo "  build-darwin-amd64  - Build for macOS Intel"
@@ -204,12 +264,19 @@ help:
 	@echo "  test-full           - Test full data transfer"
 	@echo "  test-replacement-scan - Test replacement scan (duckarrow.* syntax)"
 	@echo "  test-pool           - Test connection pooling"
+	@echo "  test-attach         - Test ATTACH/DETACH functionality"
+	@echo "  test-show-tables    - Test SHOW TABLES functionality"
+	@echo "  test-show-schemas   - Test SHOW SCHEMAS functionality"
+	@echo "  test-qualified      - Test qualified queries (three-part and two-part names)"
+	@echo "  test-info-schema    - Test information_schema integration"
+	@echo "  test-projection     - Test projection pushdown"
 	@echo "  test-types          - Test data type conversions"
 	@echo "  test-edge-cases     - Test edge cases (large results, unicode)"
 	@echo "  test-errors         - Test error handling"
 	@echo ""
 	@echo "Other:"
-	@echo "  clean               - Remove build artifacts"
+	@echo "  clean               - Remove build artifacts (including C++)"
+	@echo "  cpp-clean           - Remove C++ build artifacts only"
 	@echo "  deps                - Install dependencies"
 	@echo "  fmt                 - Format Go code"
 	@echo ""

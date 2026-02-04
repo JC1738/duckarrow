@@ -65,8 +65,12 @@ curl -LO "https://github.com/JC1738/duckarrow/releases/download/${VERSION}/ducka
 #### Prerequisites
 
 - Go 1.24.0+
+- CMake 3.15+
+- C++ compiler with C++17 support (GCC 9+, Clang 10+, or MSVC 2019+)
 - Python 3 (for metadata embedding)
 - CGO enabled
+
+See [docs/building.md](docs/building.md) for detailed build requirements and troubleshooting.
 
 #### Clone and Build
 

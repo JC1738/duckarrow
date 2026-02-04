@@ -35,6 +35,10 @@ jobs:
         with:
           go-version-file: 'go.mod'
           cache: true
+      - name: Install C++ toolchain (Linux)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
       - name: Run unit tests
         run: make test-unit
 
@@ -78,6 +82,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
+      - name: Install C++ toolchain (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake build-essential
+
+      - name: Install C++ toolchain (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System' -y
 
       - name: Setup CGO (Windows)
         if: runner.os == 'Windows'
