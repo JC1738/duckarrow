@@ -54,10 +54,18 @@ deps:
 	fi
 	go mod tidy
 
+# CMake generator - use MinGW Makefiles on Windows for CGO compatibility
+ifeq ($(GOOS),windows)
+    CMAKE_GENERATOR := -G "MinGW Makefiles"
+else
+    CMAKE_GENERATOR :=
+endif
+
 # Configure CMake for C++ build
 cmake-configure:
 	@mkdir -p $(CPP_BUILD_DIR)
 	cmake -S $(CPP_DIR) -B $(CPP_BUILD_DIR) \
+		$(CMAKE_GENERATOR) \
 		-DCMAKE_BUILD_TYPE=Release \
 		-DBUILD_SHARED_LIBS=OFF \
 		-DDUCKDB_VERSION=$(DUCKDB_VERSION)
