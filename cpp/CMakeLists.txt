@@ -53,8 +53,11 @@ message(STATUS "DuckDB version: ${DUCKDB_VERSION} -> ${DUCKARROW_DUCKDB_VERSION_
 # Collect source files
 file(GLOB_RECURSE SOURCES "*.cpp")
 
-# Create shared library for the storage extension layer
-add_library(duckarrow_storage SHARED ${SOURCES})
+# Create static library for linking into Go extension
+add_library(duckarrow_storage STATIC ${SOURCES})
+
+# Enable Position Independent Code (required for linking into shared library)
+set_target_properties(duckarrow_storage PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # Define DuckDB version for conditional compilation
 target_compile_definitions(duckarrow_storage PRIVATE
@@ -76,21 +79,8 @@ if(WIN32)
     target_compile_definitions(duckarrow_storage PRIVATE DUCKARROW_STORAGE_EXPORTS)
 endif()
 
-# Platform-specific output settings
-if(APPLE)
-    # Allow undefined symbols - they'll be resolved at load time when
-    # the extension is loaded into DuckDB (which provides these symbols)
-    set_target_properties(duckarrow_storage PROPERTIES
-        SUFFIX ".dylib"
-        INSTALL_RPATH "@loader_path"
-        LINK_FLAGS "-undefined dynamic_lookup"
-    )
-elseif(UNIX)
-    set_target_properties(duckarrow_storage PROPERTIES
-        SUFFIX ".so"
-        INSTALL_RPATH "$ORIGIN"
-    )
-endif()
+# Static library output - no platform-specific settings needed
+# The static library will be linked into the Go shared extension
 
 # Install target
 install(TARGETS duckarrow_storage
