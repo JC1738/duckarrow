@@ -363,11 +363,16 @@ static void DuckArrowScanFunction(duckdb::ClientContext &context, duckdb::TableF
 			throw duckdb::IOException("DuckArrow scan init callback not registered");
 		}
 
+		// Convert column_t (uint64_t) to size_t for callback compatibility
+		// On macOS, these are different types even though both are 64-bit
+		std::vector<size_t> column_ids_converted(global_state.column_ids.begin(),
+		                                         global_state.column_ids.end());
+
 		// Pass column IDs for projection pushdown
 		const char *err = g_scan_init_callback(
 		    bind_data.scan_handle,
-		    global_state.column_ids.data(),
-		    global_state.column_ids.size());
+		    column_ids_converted.data(),
+		    column_ids_converted.size());
 
 		if (err) {
 			duckdb::string error_msg(err);
