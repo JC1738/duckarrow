@@ -79,6 +79,13 @@ ifneq ($(GOOS),windows)
 	cmake --build $(CPP_BUILD_DIR) --config Release
 endif
 
+# Linux requires external linker to properly include C++ symbols with --whole-archive
+ifeq ($(GOOS),linux)
+    GO_LDFLAGS := -X main.Version=$(EXTENSION_VERSION) -linkmode external
+else
+    GO_LDFLAGS := -X main.Version=$(EXTENSION_VERSION)
+endif
+
 # Build the extension
 # On Windows, skip C++ library (ATTACH not supported due to linker limitations)
 ifeq ($(GOOS),windows)
@@ -87,7 +94,7 @@ else
 build: deps cmake-build
 endif
 	CGO_ENABLED=1 GOOS=$(GOOS) GOARCH=$(GOARCH) \
-		go build -buildmode=c-shared -ldflags="-X main.Version=$(EXTENSION_VERSION)" -o $(OUTPUT) ./
+		go build -buildmode=c-shared -ldflags="$(GO_LDFLAGS)" -o $(OUTPUT) ./
 	cd $(OUTPUT_DIR) && python3 ../../$(SCRIPTS_DIR)/append_extension_metadata.py \
 		-l $(EXTENSION_NAME)$(EXT) \
 		-n $(EXTENSION_NAME) \

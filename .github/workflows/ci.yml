@@ -116,8 +116,8 @@ jobs:
       - name: Build extension
         run: make build GOOS=${{ matrix.goos }} GOARCH=${{ matrix.goarch }}
         env:
-          # Allow linker flags for runtime symbol resolution (macOS and Windows)
-          CGO_LDFLAGS_ALLOW: '-undefined|-Wl,-undefined|-Wl,--unresolved-symbols=.*'
+          # Allow linker flags for runtime symbol resolution and whole-archive
+          CGO_LDFLAGS_ALLOW: '-undefined|-Wl,-undefined|-Wl,--unresolved-symbols=.*|-Wl,--whole-archive|-Wl,--no-whole-archive'
 
       - uses: actions/upload-artifact@v4
         with:

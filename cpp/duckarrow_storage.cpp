@@ -147,32 +147,36 @@ extern "C" {
 // Thread safety: This function should be called once during extension initialization.
 // It is not safe to call concurrently from multiple threads.
 DUCKARROW_API bool duckarrow_register_storage_extension(void *db_handle) {
-	if (db_handle == nullptr) {
-		return false;
-	}
+	// Storage extension registration requires DBConfig::GetConfig which is an internal
+	// DuckDB API not exported from DuckDB's binary. This functionality requires either:
+	// 1. Building DuckDB from source with the extension compiled in
+	// 2. DuckDB adding a C API for registering storage extensions
+	//
+	// For now, this always returns false. The extension still works via table functions
+	// like duckarrow_query(), duckarrow_schemas(), duckarrow_tables(), etc.
+	//
+	// TODO: Re-enable when DuckDB exports storage extension registration API
+	(void)db_handle; // Suppress unused parameter warning
+	return false;
 
-	try {
-		// Cast the opaque handle to the internal DatabaseData structure
-		auto *db_data = static_cast<DatabaseData *>(db_handle);
-
-		if (!db_data->database) {
-			return false;
-		}
-
-		// Get the DuckDB instance and its configuration
-		auto &db = *db_data->database;
-		auto &config = duckdb::DBConfig::GetConfig(*db.instance);
-
-		// Register the storage extension with the name "duckarrow"
-		// This allows users to use: ATTACH 'grpc://host:port' AS db (TYPE duckarrow)
-		config.storage_extensions["duckarrow"] =
-		    duckdb::make_uniq<duckarrow::DuckArrowStorageExtension>();
-
-		return true;
-	} catch (...) {
-		// Catch any exceptions and return failure
-		return false;
-	}
+	// Original implementation (requires internal DuckDB API):
+	//
+	// if (db_handle == nullptr) {
+	//     return false;
+	// }
+	// try {
+	//     auto *db_data = static_cast<DatabaseData *>(db_handle);
+	//     if (!db_data->database) {
+	//         return false;
+	//     }
+	//     auto &db = *db_data->database;
+	//     auto &config = duckdb::DBConfig::GetConfig(*db.instance);
+	//     config.storage_extensions["duckarrow"] =
+	//         duckdb::make_uniq<duckarrow::DuckArrowStorageExtension>();
+	//     return true;
+	// } catch (...) {
+	//     return false;
+	// }
 }
 
 } // extern "C"
