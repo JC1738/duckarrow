@@ -2,7 +2,7 @@
 title: ""
 ---
 
-<img src="duck_arrow.jpg" alt="DuckArrow Logo" width="400">
+<img src="duck_arrow.jpg" alt="DuckArrow Logo" width="400" style="display:block; margin-left:0">
 
 **Query Apache Arrow Flight SQL servers directly from DuckDB**
 
