@@ -1,6 +1,7 @@
 # DuckArrow - DuckDB Flight SQL Extension
 
 [![CI](https://github.com/JC1738/duckarrow/actions/workflows/ci.yml/badge.svg)](https://github.com/JC1738/duckarrow/actions/workflows/ci.yml)
+[![Website](https://img.shields.io/badge/Website-gh%20pages-blue)](https://jc1738.github.io/duckarrow/)
 
 A DuckDB extension written in Go that enables querying remote [Apache Arrow Flight SQL](https://arrow.apache.org/docs/format/FlightSql.html) servers directly from DuckDB SQL.
 
