@@ -1,3 +1,5 @@
+.env
+
 # Build artifacts
 build/
 main
@@ -12,13 +14,19 @@ cgo/
 .vscode/
 *.swp
 *.swo
+.gitattributes
 
 duckarrow-github.sql
 duckarrow-prod.sql
 
-docs
+internal/docs
 CLAUDE.md
 AGENTS.md
 .claude
+.beads
+.opencode
+openspec/
+spec/
+
 # OS
 .DS_Store
