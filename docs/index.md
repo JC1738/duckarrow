@@ -1,6 +1,8 @@
-# DuckArrow
+---
+title: ""
+---
 
-<img src="duck_arrow.jpg" alt="DuckArrow Logo" width="200">
+<img src="duck_arrow.jpg" alt="DuckArrow Logo" width="400">
 
 **Query Apache Arrow Flight SQL servers directly from DuckDB**
 
