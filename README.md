@@ -151,7 +151,7 @@ SELECT duckarrow_configure(uri, username, password, true);
 
 ### Password Security
 
-**⚠️ Security Notice**: DuckDB v1.2.0 CLI displays all function parameters in plain text.
+**⚠️ Security Notice**: DuckDB CLI displays all function parameters in plain text.
 To avoid exposing passwords in terminal history or screen sharing:
 
 **Option 1 - Environment Variable (Recommended)**:
